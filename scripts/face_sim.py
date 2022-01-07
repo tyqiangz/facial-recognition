@@ -3,7 +3,14 @@ import argparse
 import face_recognition
 from PIL import Image, ImageDraw
 import numpy as np
-parser = argparse.ArgumentParser()
+parser = argparse.ArgumentParser(description="""Given two images, detect the face(s) and compute a similarity score for the faces.
+
+If each image has 1 and only 1 face, then a score ranging from 0 to 1 is computed.
+0 being the faces are extremely different, 1 being the faces are exactly the same.
+
+If any of the two images has no faces detected or more than 1 faces detected, a value None is returned.
+""",
+                                 formatter_class=argparse.RawTextHelpFormatter)
 
 parser.add_argument("IMAGE_PATH_1", help="absolute path to the first image")
 parser.add_argument("IMAGE_PATH_2", help="absolute path to the second image")
