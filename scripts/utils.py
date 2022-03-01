@@ -1,13 +1,57 @@
+import math
 import numpy as np
 import cv2
 from matplotlib import pyplot as plt
-import face_recognition
 from PIL import Image, ImageDraw
 
-from facenet_pytorch import MTCNN
+import face_recognition
+from facenet_pytorch import MTCNN, InceptionResnetV1
 import torch
 
 from sklearn.cluster import KMeans
+
+import warnings
+warnings.filterwarnings("ignore", category=UserWarning)
+
+def distance(embeddings1, embeddings2, distance_metric='euclidean'):
+    '''
+    Distance metric for 2 embedding vectors.
+    
+    :param embeddings1: first embedding, shape of 1 x N
+    :type embeddings1: numpy.ndarray
+
+    :param embeddings2: second embedding, shape of 1 x N
+    :type embeddings2: numpy.ndarray
+    
+    :param distance_metric: the distance metric to use to compare similarity
+        between two embedding vectors.
+    :type distance_metric: str
+    
+    :return dist: distance between the embedding vectors based on the selected distance metric
+    :rtype dist: float
+    '''
+
+    if distance_metric=='euclidean':
+        # Euclidian distance
+        dist = np.linalg.norm(embeddings1 - embeddings2)
+    
+    elif distance_metric=='cosine':
+        # Distance based on cosine similarity
+        dot = np.sum(np.multiply(embeddings1, embeddings2))
+        norm = np.linalg.norm(embeddings1) * np.linalg.norm(embeddings2)
+        similarity = dot / norm
+        
+        # to round down for round-off errors where `similarity = 1.00001`
+        if similarity > 1:
+            similarity = 1
+        if similarity < -1:
+            similarity = -1
+        
+        dist = np.arccos(similarity) / math.pi
+    else:
+        raise f"Undefined distance metric: {distance_metric}"
+
+    return dist
 
 def get_face_similarity(image_path_1, image_path_2, method="dlib"):
     '''
@@ -52,16 +96,53 @@ def get_face_similarity(image_path_1, image_path_2, method="dlib"):
             # convert the numpy array to float
             face_similarity = 1 - float(face_distances)
             return face_similarity
-        
+        # else return None
         else:
             return None
     elif method == "facenet":
-        image = Image.open(image_path_1).convert("RGB")
+        embeddings = []
+        IMAGE_PATHS = [image_path_1, image_path_2]
 
+        device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+
+        # for detecting bounding box for face(s)
         mtcnn = MTCNN(
-            image_size=160, margin=20, min_face_size=20, keep_all=True,
-            device=device
+            image_size=160, margin=0, min_face_size=20,
+            thresholds=[0.6, 0.7, 0.7], factor=0.709, post_process=True,
+            keep_all=True, device=device
         )
+
+        # for generating embeddings for a face image
+        resnet = InceptionResnetV1(pretrained='vggface2').eval().to(device)
+
+        for i in range(len(IMAGE_PATHS)):
+            image_path = IMAGE_PATHS[i]
+            
+            image = Image.open(image_path).convert("RGB")
+            
+            face_images, prob = mtcnn(image, return_prob=True)
+            
+            if face_images is None:
+                print(f"0 face(s) found in {image_path}")
+                embeddings.append(None)
+
+            else:
+                print(f"{len(face_images)} face(s) found in {image_path}")
+
+                if len(face_images) > 1:
+                    embeddings.append(None)
+                elif len(face_images) == 1:
+                    embedding = resnet(face_images).detach().cpu()
+                    embeddings.append(embedding[0])
+                
+        e1 = embeddings[0]
+        e2 = embeddings[1]
+
+        if e1 is None or e2 is None:
+            return None
+
+        face_similarity = 1 - distance(e1.numpy(), e2.numpy(), distance_metric='cosine')
+        return face_similarity
 
 def plot_faces(image_path):
     '''
@@ -349,7 +430,7 @@ def get_face_landmarks(image_path, method="dlib"):
     
     elif method == "facenet":
         image = Image.open(image_path).convert("RGB")
-        device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu'):
+        device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
         mtcnn = MTCNN(
             image_size=160, margin=20, min_face_size=20, keep_all=True,
             device=device
@@ -411,9 +492,7 @@ def get_skin_tone_similarity_face(image_path_1, image_path_2):
     skin_tones = []
     skin_imgs = []
     
-    for image_path in [image_path_1, image_path_2]:
-        print(image_path)
-        
+    for image_path in [image_path_1, image_path_2]:        
         # try obtaining facial landmarks using facenet
         face_landmarks, image = get_face_landmarks(image_path, method="facenet")
         

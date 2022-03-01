@@ -18,7 +18,7 @@ parser.add_argument("-s", "--show_faces", action="store_true",
 
 args = parser.parse_args()
 
-face_similarity = get_face_similarity(args.IMAGE_PATH_1, args.IMAGE_PATH_2)
+face_similarity = get_face_similarity(args.IMAGE_PATH_1, args.IMAGE_PATH_2, method="facenet")
 skin_tone_similarity, skin_1, skin_2, skin_tone_1, skin_tone_2 = get_skin_tone_similarity_face(args.IMAGE_PATH_1, args.IMAGE_PATH_2)
 
 print("Face Similarity:", face_similarity)
