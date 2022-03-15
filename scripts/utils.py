@@ -53,7 +53,7 @@ def distance(embeddings1, embeddings2, distance_metric='euclidean'):
 
     return dist
 
-def get_face_similarity(image_path_1, image_path_2, method="dlib"):
+def get_face_similarity(image_path_1, image_path_2, method="facenet"):
     '''
     Compute a similarity score of the faces in 2 images.
     1 being exactly the same face, 0 being totally different.
@@ -99,6 +99,7 @@ def get_face_similarity(image_path_1, image_path_2, method="dlib"):
         # else return None
         else:
             return None
+
     elif method == "facenet":
         embeddings = []
         IMAGE_PATHS = [image_path_1, image_path_2]
