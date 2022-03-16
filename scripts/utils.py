@@ -13,6 +13,13 @@ from sklearn.cluster import KMeans
 import warnings
 warnings.filterwarnings("ignore", category=UserWarning)
 
+def generate_embedding(source_dir_name, dest_file_name):
+    """
+    For all images in `source_dir_name`, convert the i
+    """
+
+    return 
+
 def distance(embeddings1, embeddings2, distance_metric='euclidean'):
     '''
     Distance metric for 2 embedding vectors.
