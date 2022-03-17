@@ -13,13 +13,6 @@ from sklearn.cluster import KMeans
 import warnings
 warnings.filterwarnings("ignore", category=UserWarning)
 
-def generate_embedding(source_dir_name, dest_file_name):
-    """
-    For all images in `source_dir_name`, convert the i
-    """
-
-    return 
-
 def distance(embeddings1, embeddings2, distance_metric='euclidean'):
     '''
     Distance metric for 2 embedding vectors.
@@ -37,7 +30,7 @@ def distance(embeddings1, embeddings2, distance_metric='euclidean'):
     :return dist: distance between the embedding vectors based on the selected distance metric
     :rtype dist: float
     '''
-
+    
     if distance_metric=='euclidean':
         # Euclidian distance
         dist = np.linalg.norm(embeddings1 - embeddings2)
@@ -59,6 +52,58 @@ def distance(embeddings1, embeddings2, distance_metric='euclidean'):
         raise f"Undefined distance metric: {distance_metric}"
 
     return dist
+
+def get_face_embedding(image_path, method="facenet"):
+    '''
+    Compute an face embedding for an image containing face.
+    If one or more faces are found in the image, the area of the image 
+    that has the highest probability of being a face is returned.
+
+    :param image_path: filepath to image
+    :type image_path: str
+
+    :return embedding: a vector representing the face
+    :rtype embedding: numpy.ndarray
+    '''
+
+    if method == "dlib":
+        # TODO
+        pass
+
+    elif method == "facenet":
+        device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+
+        # for detecting bounding box for face(s)
+        # only at most 1 face will be returned, 
+        # the area of the image that is most probably a face is returned
+        mtcnn = MTCNN(
+            image_size=200, margin=0, min_face_size=50,
+            thresholds=[0.6, 0.7, 0.7], factor=0.709, post_process=True,
+            select_largest=False,
+            keep_all=False, device=device
+        )
+
+        # for generating embeddings for a face image
+        resnet = InceptionResnetV1(pretrained='vggface2').eval().to(device)
+
+        # try to open an image using Python PIL package
+        image = Image.open(image_path).convert("RGB")
+        
+        # detect faces
+        face_image, prob = mtcnn(image, return_prob=True)
+        
+        # if no faces are detected
+        if face_image is None:
+            embedding = None
+        else:
+            # add one more dimension to the tensors as the resnet takes in a tensor of dimension 4
+            # `(num_img, num_channels, width, height)`
+            face_images = torch.unsqueeze(face_image, dim=0)
+            
+            # obtain face embedding
+            embedding = resnet(face_images).detach().cpu()[0].numpy()
+
+        return embedding
 
 def get_face_similarity(image_path_1, image_path_2, method="facenet"):
     '''
@@ -108,48 +153,13 @@ def get_face_similarity(image_path_1, image_path_2, method="facenet"):
             return None
 
     elif method == "facenet":
-        embeddings = []
-        IMAGE_PATHS = [image_path_1, image_path_2]
+        embedding_1 = get_face_embedding(image_path_1, method=method)
+        embedding_2 = get_face_embedding(image_path_2, method=method)
 
-        device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-
-        # for detecting bounding box for face(s)
-        mtcnn = MTCNN(
-            image_size=160, margin=0, min_face_size=20,
-            thresholds=[0.6, 0.7, 0.7], factor=0.709, post_process=True,
-            keep_all=True, device=device
-        )
-
-        # for generating embeddings for a face image
-        resnet = InceptionResnetV1(pretrained='vggface2').eval().to(device)
-
-        for i in range(len(IMAGE_PATHS)):
-            image_path = IMAGE_PATHS[i]
-            
-            image = Image.open(image_path).convert("RGB")
-            
-            face_images, prob = mtcnn(image, return_prob=True)
-            
-            if face_images is None:
-                print(f"0 face(s) found in {image_path}")
-                embeddings.append(None)
-
-            else:
-                print(f"{len(face_images)} face(s) found in {image_path}")
-
-                if len(face_images) > 1:
-                    embeddings.append(None)
-                elif len(face_images) == 1:
-                    embedding = resnet(face_images).detach().cpu()
-                    embeddings.append(embedding[0])
-                
-        e1 = embeddings[0]
-        e2 = embeddings[1]
-
-        if e1 is None or e2 is None:
+        if embedding_1 is None or embedding_2 is None:
             return None
 
-        face_similarity = 1 - distance(e1.numpy(), e2.numpy(), distance_metric='cosine')
+        face_similarity = 1 - distance(embedding_1, embedding_2, distance_metric='cosine')
         return face_similarity
 
 def plot_faces(image_path):
