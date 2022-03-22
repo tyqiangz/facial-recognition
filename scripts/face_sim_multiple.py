@@ -1,6 +1,8 @@
 import argparse
-
 from utils import *
+from datetime import datetime
+import pprint
+import os
 
 parser = argparse.ArgumentParser(description="""Given an image, return the top few similar faces based on facial similarity and skin tone similarity.
 
@@ -8,19 +10,36 @@ The filenames of the image and the similarity score should be returned.
 """,
                                  formatter_class=argparse.RawTextHelpFormatter)
 
-parser.add_argument("IMAGE_PATH_1", help="absolute path to the first image")
-parser.add_argument("IMAGE_PATH_2", help="absolute path to the second image")
-parser.add_argument("-s", "--show_faces", action="store_true", 
-                    help="display the face(s) found in `IMAGE_PATH_1` and `IMAGE_PATH_2`")
+def check_positive(value):
+    ivalue = int(value)
+    if ivalue <= 0:
+        raise argparse.ArgumentTypeError("%s is an invalid positive integer value" % value)
+    return ivalue
+
+parser.add_argument("IMAGE_PATH", help="absolute path to an image")
+parser.add_argument("NUM_FACES_TO_RETURN", 
+                    help="number of most similar faces to return, must be a positive integer value",
+                    type=check_positive)
 
 args = parser.parse_args()
 
-face_similarity = get_face_similarity(args.IMAGE_PATH_1, args.IMAGE_PATH_2, method="facenet")
-skin_tone_similarity, skin_1, skin_2, skin_tone_1, skin_tone_2 = get_skin_tone_similarity_face(args.IMAGE_PATH_1, args.IMAGE_PATH_2)
+top_similar_faces = get_top_similar_faces(image_filepath=args.IMAGE_PATH, 
+                                          image_directory='../images',
+                                          pickle_filepath='../backend/facial_features.pickle',
+                                          top_n=int(args.NUM_FACES_TO_RETURN))
+top_similar_skins = get_top_similar_skins(image_filepath=args.IMAGE_PATH, 
+                                          image_directory='../images',
+                                          pickle_filepath='../backend/facial_features.pickle',
+                                          top_n=int(args.NUM_FACES_TO_RETURN))
 
-print("Face Similarity:", face_similarity)
-print("Skin Similarity:", skin_tone_similarity)
-    
-if args.show_faces:
-    plot_faces(args.IMAGE_PATH_1)
-    plot_faces(args.IMAGE_PATH_2)
+results_filename = 'results_' + datetime.today().strftime('%Y_%m_%d_%H_%M_%S') + '.txt' 
+results_filepath = '../results/' + results_filename
+
+with open(results_filepath, 'w') as f:
+    f.write(f'Most similar faces for {args.IMAGE_PATH}\n\n')
+    f.writelines(pprint.pformat(top_similar_faces) + '\n')
+    f.write('-'*100 + '\n')
+    f.write(f'Most similar skin tone for {args.IMAGE_PATH}\n\n')
+    f.writelines(pprint.pformat(top_similar_skins))
+
+print(f'Results are stored in {os.path.abspath(results_filepath)}')

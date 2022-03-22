@@ -1,0 +1,23 @@
+Most similar faces for ../images/miscellaneous/korean_female_face.jpeg
+[{'face_similarity_score': 0.7972851839668899,
+  'image_filepath': 'C:\\Users\\tay.yq.XTRAMAN\\Documents\\GitHub\\facial-recognition\\images\\politician_baey_yam_keng\\09812.jpg'},
+ {'face_similarity_score': 0.7923574111809503,
+  'image_filepath': 'C:\\Users\\tay.yq.XTRAMAN\\Documents\\GitHub\\facial-recognition\\images\\politician_baey_yam_keng\\00843.jpg'},
+ {'face_similarity_score': 0.7863283462823369,
+  'image_filepath': 'C:\\Users\\tay.yq.XTRAMAN\\Documents\\GitHub\\facial-recognition\\images\\politician_baey_yam_keng\\00383.jpg'},
+ {'face_similarity_score': 0.7788098258259685,
+  'image_filepath': 'C:\\Users\\tay.yq.XTRAMAN\\Documents\\GitHub\\facial-recognition\\images\\politician_baey_yam_keng\\04296.jpg'},
+ {'face_similarity_score': 0.7711761407910944,
+  'image_filepath': 'C:\\Users\\tay.yq.XTRAMAN\\Documents\\GitHub\\facial-recognition\\images\\politician_baey_yam_keng\\05115.jpg'}]
+----------------------------------------------------------------------------------------------------
+Most similar skin tone for ../images/miscellaneous/korean_female_face.jpeg
+[{'image_filepath': 'C:\\Users\\tay.yq.XTRAMAN\\Documents\\GitHub\\facial-recognition\\images\\politician_goh_chok_tong\\00255.jpg',
+  'skin_similarity_score': 0.9856209150326798},
+ {'image_filepath': 'C:\\Users\\tay.yq.XTRAMAN\\Documents\\GitHub\\facial-recognition\\images\\cellist_laufey\\00020.jpg',
+  'skin_similarity_score': 0.9784313725490197},
+ {'image_filepath': 'C:\\Users\\tay.yq.XTRAMAN\\Documents\\GitHub\\facial-recognition\\images\\twoset_violin_brett_yang\\00062.jpg',
+  'skin_similarity_score': 0.961437908496732},
+ {'image_filepath': 'C:\\Users\\tay.yq.XTRAMAN\\Documents\\GitHub\\facial-recognition\\images\\twoset_violin_eddy_chen\\00002.jpg',
+  'skin_similarity_score': 0.9594771241830066},
+ {'image_filepath': 'C:\\Users\\tay.yq.XTRAMAN\\Documents\\GitHub\\facial-recognition\\images\\youtuber_davie504\\00671.jpg',
+  'skin_similarity_score': 0.9549019607843137}]
